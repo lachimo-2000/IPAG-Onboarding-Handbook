@@ -131,8 +131,8 @@ const welcomeContent = {
   // Muốn ẩn box: đổi hienThi thành false.
   thuChuTich: {
     hienThi: true,
-    tieuDe: "Thư từ Chủ tịch gửi người bạn mới của IPA Group",
-    moTa: "Trước khi bắt đầu, hãy dành ít phút đọc bức thư Chủ tịch Vũ Hiền gửi người bạn mới.",
+    tieuDe: "Thư từ Chủ tịch Phạm Minh Hương gửi người bạn mới của IPA Group",
+    moTa: "Trước khi bắt đầu, hãy dành ít phút đọc bức thư Chủ tịch Phạm Minh Hương gửi người bạn mới.",
     nutMo: "Đọc thư",
     ghiChu: "Bấm vào ảnh để mở bản đầy đủ (phóng to / thu nhỏ trực tiếp).",
     // Thư "IPA Group – Gia tài của chúng ta": 4 trang ngang 1920×1080 (03/11/2026)
@@ -186,13 +186,7 @@ const welcomeContent = {
 
 // --- 2.1. MODULE: DẪN NHẬP (đầu menu) ---
 const danNhapContent = {
-  bia: {
-    tieuDe: "SỔ TAY HỘI NHẬP",
-    tenTapDoan: "IPA GROUP",
-    dongPhu: ["Hệ sinh thái Wellbeing Việt Nam", "Vận hành theo mô hình Ngân hàng Năng lực"],
-    loiChao: "Chào mừng bạn đến với IPA Group.",
-    camKet: "Hành trình của bạn bắt đầu từ hôm nay."
-  },
+  // (Đã bỏ khối bìa "SỔ TAY HỘI NHẬP · IPA GROUP" theo yêu cầu 03/11/2026)
   tieuDe: "Dẫn nhập",
   khoi: [
     { loai: "doan", noiDung: "Có lẽ lúc này trong bạn đang có đủ thứ cảm xúc: một chút háo hức, một chút hồi hộp, và vài câu hỏi chưa biết hỏi ai. Không sao cả. Ai ở đây cũng từng có một ngày đầu tiên như bạn hôm nay." },
@@ -704,16 +698,14 @@ const nguonLucContent = {
         // Đầu mối riêng theo SBU — engine tự lọc theo SBU đã chọn ở màn welcome.
         // Cách thêm/sửa: mỗi SBU là 1 mảng, mỗi người là 1 dòng { ten, email }.
         dauMoiTheoSBU: {
-          IPAG:  [ { ten: "Ms Hoàn Trần",       email: "hoan.tranthu@ipam.vn" } ],
-          VNDS:  [ { ten: "Ms Mai Hoàng",      email: "mai.vuhoang@ipam.vn" },
-                   { ten: "Ms Thu Hương",      email: "huong.nguyenthu13@ipam.vn" } ],
-          PTI:   [ { ten: "Ms Trần Thu Hằng",  email: "hang.tranthu@ipam.vn" },
-                   { ten: "Ms Phạm Hiếu Ngân", email: "ngan.phamhieu@ipam.vn" } ],
-          IPAS:  [ { ten: "Ms Phạm Hiếu Ngân", email: "ngan.phamhieu@ipam.vn" } ],
-          ANVIE: [ { ten: "Ms Hoàn Trần",      email: "hoan.tranthu@ipam.vn" } ]
+          IPAG:  [ { ten: "Ms. Trần Thu Hoàn",     email: "hoan.tranthu@ipam.vn" } ],
+          VNDS:  [ { ten: "Ms. Vũ Hoàng Mai",      email: "mai.vuhoang@ipam.vn" } ],
+          PTI:   [ { ten: "Ms. Trần Thị Thu Hằng", email: "hang.tranthu@ipam.vn" } ],
+          IPAS:  [ { ten: "Ms. Trần Thu Hoàn",     email: "hoan.tranthu@ipam.vn" } ],
+          ANVIE: [ { ten: "Ms. Trần Thu Hoàn",     email: "hoan.tranthu@ipam.vn" } ]
         },
         // Dự phòng: hiện khi SBU chưa được khai báo ở trên
-        email: "huong.nguyenthu13@ipam.vn",
+        email: "hoan.tranthu@ipam.vn",
         mauNhan: "orange"
       }
     ]
@@ -886,7 +878,7 @@ const faqData = [
     nhom: "Phần 5 — Đầu mối liên hệ & hỗ trợ",
     cacCau: [
       { q: "Tôi có thể liên hệ đầu mối nào để được hỗ trợ vấn đề liên quan đến kỹ thuật và hệ thống LMS?", a: "Bạn có thể liên hệ bộ phận đào tạo, kênh hỗ trợ LMS được công bố trên hệ thống hoặc liên hệ trực tiếp các đầu mối quản trị hệ thống sau:<ul><li><strong>Mr Nguyễn Sỹ Đắc</strong> — dac.nguyensy@ipam.vn</li><li><strong>Mr Trương Minh Đức</strong> — duc.truongminh@ipam.vn</li></ul>" },
-      { q: "Tôi có thể liên hệ đầu mối nào để hỏi thông tin về lộ trình và chuyên môn đào tạo hội nhập?", a: "Bạn vui lòng liên hệ đầu mối phụ trách theo SBU tương ứng:<ul><li><strong>Đơn vị PTI:</strong> Ms Phạm Hiếu Ngân — ngan.phamhieu@ipam.vn — 0963 278 246</li><li><strong>Các SBU còn lại:</strong> Ms Nguyễn Thu Hương — huong.nguyenthu13@ipam.vn — 0366 737 557</li></ul>" }
+      { q: "Tôi có thể liên hệ đầu mối nào để hỏi thông tin về lộ trình và chuyên môn đào tạo hội nhập?", a: "Bạn vui lòng liên hệ đầu mối phụ trách: <strong>Mr Trương Minh Đức</strong> — duc.truongminh@ipam.vn<br><br>Hoặc liên hệ <strong>IP (iLead Partner)</strong> theo SBU của bạn:<ul><li><strong>VNDIRECT:</strong> Ms. Vũ Hoàng Mai — mai.vuhoang@ipam.vn</li><li><strong>PTI:</strong> Ms. Trần Thị Thu Hằng — hang.tranthu@ipam.vn</li><li><strong>IPAS / ANVIE / IPAG:</strong> Ms. Trần Thu Hoàn — hoan.tranthu@ipam.vn</li></ul>" }
     ]
   },
   {
@@ -984,13 +976,13 @@ const globalTips = {
   },
   'nguon-luc': {
     tieuDe: "Nguyên tắc 'Hỏi đúng người'",
-    noiDung: "- Văn hoá, hoà nhập, cơ hội phát triển → Hỏi **IP (iLead Partner)**.\n- Chỗ đứng trong tổ chức, luồng việc, quyền lợi → Hỏi **HRBP**.\n- Môi trường làm việc, cách vận hành hằng ngày → Hỏi **Người bạn đồng hành**.\n- Mục tiêu, nhiệm vụ công việc → Hỏi **Quản lý trực tiếp**.\n- Hợp đồng, lương, bảo hiểm, chế độ → Hỏi **CnB**.\n- Lỗi kỹ thuật LMS → **Mr Nguyễn Sỹ Đắc** (dac.nguyensy@ipam.vn) hoặc **Mr Trương Minh Đức** (duc.truongminh@ipam.vn).\n- Lộ trình đào tạo hội nhập → PTI: **Ms Phạm Hiếu Ngân** (ngan.phamhieu@ipam.vn); SBU khác: **Ms Nguyễn Thu Hương**."
+    noiDung: "- Văn hoá, hoà nhập, cơ hội phát triển → Hỏi **IP (iLead Partner)** theo SBU (xem bên dưới).\n- Chỗ đứng trong tổ chức, luồng việc, quyền lợi → Hỏi **HRBP**.\n- Môi trường làm việc, cách vận hành hằng ngày → Hỏi **Người bạn đồng hành**.\n- Mục tiêu, nhiệm vụ công việc → Hỏi **Quản lý trực tiếp**.\n- Hợp đồng, lương, bảo hiểm, chế độ → Hỏi **CnB**.\n- Lỗi kỹ thuật LMS → **Mr Nguyễn Sỹ Đắc** (dac.nguyensy@ipam.vn) hoặc **Mr Trương Minh Đức** (duc.truongminh@ipam.vn).\n- Lộ trình & chuyên môn đào tạo hội nhập → **Mr Trương Minh Đức** (duc.truongminh@ipam.vn).\n\n**IP (iLead Partner) theo SBU:**\n- VNDIRECT → **Ms. Vũ Hoàng Mai** (mai.vuhoang@ipam.vn)\n- PTI → **Ms. Trần Thị Thu Hằng** (hang.tranthu@ipam.vn)\n- IPAS / ANVIE / IPAG → **Ms. Trần Thu Hoàn** (hoan.tranthu@ipam.vn)"
   },  'glossary': {
     tieuDe: "Cách dùng từ điển hiệu quả",
     noiDung: "Từ điển chia làm 5 nhóm theo 5 bộ công cụ trong Phần II của Sổ tay:\n- **IPA** — chiến lược & Tam bảo (5P, 5A, COL, COP, COE...)\n- **IPAC** — dựng nhà & vận hành (FC, OC, HWG, GTM, BMI, KPI...)\n- **IPAG** — gia tài & tri thức (5K, KMS, LMS, CB...)\n- **EPIC** — cộng sự & đội ngũ (5S, SOA, FD Lead, OPD...)\n- **iLead** — chủ nhiệm & tự chủ (5PoA, La Bàn, SBI, TAC, CAT)\n\nMẹo: gõ vào ô tìm kiếm phần đầu của từ (vd: 'SOA') để nhảy thẳng tới nơi cần. Không cần nhớ chính xác cả từ."
   },
   'faq': {
     tieuDe: "Cách tìm câu trả lời nhanh",
-    noiDung: "FAQ chia làm 6 phần theo chủ đề.\n\n- Gõ vào ô tìm kiếm để lọc câu hỏi theo từ khoá (vd: 'LMS', 'mật khẩu', 'nghỉ phép').\n- Kỹ thuật & hệ thống LMS: **Mr Nguyễn Sỹ Đắc** — dac.nguyensy@ipam.vn, hoặc **Mr Trương Minh Đức** — duc.truongminh@ipam.vn.\n- Lộ trình đào tạo hội nhập: PTI — **Ms Phạm Hiếu Ngân**; các SBU còn lại — **Ms Nguyễn Thu Hương**.\n- Chế độ, hợp đồng, lương thưởng → **Bộ phận C&B / EPIC Partner**."
+    noiDung: "FAQ chia làm 6 phần theo chủ đề.\n\n- Gõ vào ô tìm kiếm để lọc câu hỏi theo từ khoá (vd: 'LMS', 'mật khẩu', 'nghỉ phép').\n- Kỹ thuật & hệ thống LMS: **Mr Nguyễn Sỹ Đắc** — dac.nguyensy@ipam.vn, hoặc **Mr Trương Minh Đức** — duc.truongminh@ipam.vn.\n- Lộ trình & chuyên môn đào tạo hội nhập: **Mr Trương Minh Đức** — duc.truongminh@ipam.vn.\n- Văn hoá, hoà nhập, phát triển → **IP (iLead Partner)** theo SBU — xem mục Mạng lưới đồng hành.\n- Chế độ, hợp đồng, lương thưởng → **Bộ phận C&B**."
   }
 };

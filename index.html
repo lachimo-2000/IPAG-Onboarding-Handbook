@@ -576,15 +576,15 @@ function renderSoTayModule(container, moduleId) {
 // =============================================================================
 function renderDanNhapModule(container) {
   const c = danNhapContent;
-  const b = c.bia;
+  const b = c.bia;   // khối bìa — tuỳ chọn, bỏ trong content.js thì không hiển thị
   container.innerHTML = `
     <div class="dn-wrap">
-      <div class="dn-hero st-bia">
+      ${b ? `<div class="dn-hero st-bia">
         <div class="st-bia-tt">${b.tieuDe}</div>
         <div class="st-bia-ten">${b.tenTapDoan}</div>
         <div class="st-bia-phu">${b.dongPhu.map(d => `<em>${d}</em>`).join('')}</div>
         <div class="st-bia-chao"><strong>${b.loiChao}</strong><span>${b.camKet}</span></div>
-      </div>
+      </div>` : ''}
       <h2 class="st-dn-tt">${c.tieuDe}</h2>
       <div class="st-body">${renderKhoiList(c.khoi)}</div>
       ${renderChuyenTiep(c.chuyenTiep)}

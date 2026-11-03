@@ -2013,3 +2013,7 @@ table.bang em{ color:var(--steel); font-style:italic; font-weight:600; }
 .modal-content--rong .modal-body { max-height:84vh; padding:20px 24px; background:#EBE4DB; }
 .modal-content--rong .thu-page { margin:0 0 18px; border:0; border-radius:10px; box-shadow:0 4px 18px rgba(4,48,87,.12); }
 @media (max-width: 640px){ .modal-content--rong .modal-body { padding:12px; } }
+
+/* FAQ — danh sách trong câu trả lời thụt thẳng hàng với chữ (03/11/2026) */
+.faq-a ul, .faq-a ol { padding-left:22px; margin:6px 0 4px; }
+.faq-a li { margin-bottom:4px; }
