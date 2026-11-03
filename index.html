@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Icon khi thêm vào màn hình chính (iOS/Android) + favicon -->
+<link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/icons/favicon-32.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-title" content="Sổ tay IPAG">
+<meta name="theme-color" content="#1f3a5f">
+<title>IPAG Onboarding Handbook</title>
+
+<!-- =========================================================================
+     IPAG HANDBOOK — INDEX (ENGINE) v8 — Sổ tay hội nhập 3 phần (03/11/2026)
+     =========================================================================
+     File "khung". KHÔNG sửa file này để update nội dung.
+     Để sửa text, đổi ảnh, thêm khoá học → mở content.js.
+     ========================================================================= -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="styles.css">
+<script src="content.js"></script>
+<script src="scorm_wrapper.js"></script>
+</head>
+<body>
+
+<!-- ===================== SCREEN 1: ONBOARDING / SETUP ===================== -->
+<section id="onboarding-screen">
+  <div class="ob-container">
+    <div class="ob-left">
+      <img id="welcome-logo" class="ob-logo" alt="IPA Group">
+      <div class="ob-brand" style="display:none;" id="welcome-brand-fallback"><i data-lucide="compass"></i> <span id="welcome-brand"></span></div>
+      <h1 class="ob-title" id="welcome-title"></h1>
+      <p class="ob-desc" id="welcome-loichao" style="margin-bottom: 16px; color: var(--text-main); font-weight: 500;"></p>
+      <p class="ob-desc" id="welcome-mota" style="margin-bottom: 24px;"></p>
+      <p class="ob-desc" id="welcome-huongdan" style="font-style: italic; font-size: 14px;"></p>
+    </div>
+    <div class="ob-right">
+      <!-- Box Thư Chủ tịch — nằm trên phần chọn SBU/khối -->
+      <div id="welcome-thu"></div>
+      <div id="ob-step-container"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SCREEN 2: MAIN DASHBOARD ===================== -->
+<div class="mobile-backdrop" id="mobile-backdrop" onclick="closeMobileMenu()"></div>
+<section id="main-app">
+  <aside class="sidebar">
+    <div class="sb-header">
+      <img class="sb-logo-full" id="sb-logo-full" alt="IPA Group">
+      <div class="sb-logo-icon"><i data-lucide="layout-dashboard"></i></div>
+      <button class="sb-toggle-btn" onclick="toggleSidebar()" aria-label="" id="sb-toggle-btn">
+  <i data-lucide="panel-left-close"></i>
+  <span class="toggle-label" id="sb-toggle-label"></span>
+</button>
+    </div>
+    <nav class="sb-menu" id="sb-menu"></nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <button class="mobile-hamburger" onclick="openMobileMenu()" aria-label="Mở menu">
+        <i data-lucide="menu"></i>
+      </button>
+      <div class="header-breadcrumb" id="header-title"></div>
+      <div class="header-context">
+        <span class="context-label" id="header-context-label"></span>
+        <span class="context-value" id="header-context-val"></span>
+        <button class="btn-change-context" id="btn-change-context" onclick="resetOnboarding()"></button>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <div class="content-inner animate-fade" id="module-content"></div>
+    </div>
+  </main>
+</section>
+
+<!-- ===================== MODAL: TIPS ===================== -->
+<div class="modal-overlay" id="tips-modal" onclick="closeModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="modal-title">Tip</h3>
+      <button class="btn-close" onclick="closeModal()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body" id="modal-body-content"></div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: IMAGE ZOOM (fullscreen) — dùng khi cần zoom ảnh khác ===================== -->
+<div class="zoom-overlay" id="zoom-overlay">
+  <button class="zoom-close" onclick="closeZoom()" title="Đóng"><i data-lucide="x"></i></button>
+  <div class="zoom-level" id="zoom-level">100%</div>
+  <div class="zoom-content" id="zoom-content">
+    <img class="zoom-image" id="zoom-image" src="" alt="">
+  </div>
+  <div class="zoom-controls">
+    <button class="zoom-btn" onclick="zoomOut()" title="Thu nhỏ"><i data-lucide="zoom-out"></i></button>
+    <button class="zoom-btn" onclick="zoomReset()" title="Khôi phục"><i data-lucide="maximize"></i></button>
+    <button class="zoom-btn" onclick="zoomIn()" title="Phóng to"><i data-lucide="zoom-in"></i></button>
+  </div>
+</div>
+
+<!-- =========================================================================
+     ENGINE LOGIC — đọc từ content.js, render giao diện
+     ========================================================================= -->
+<script>
+
+// --- STATE ---
+let state = {
+  sbu: null,
+  khoi: null,
+  currentModule: null,  // sẽ tự lấy module đầu tiên của menu khi vào dashboard
+};
+let openAccordionId = null;     // accordion đang mở (chỉ 1 cùng lúc)
+
+// --- INIT ---
+function init() {
+  // Inject text vào welcome
+  document.getElementById('welcome-brand').textContent = welcomeContent.brand;
+  document.getElementById('welcome-title').innerHTML = welcomeContent.tieuDe;
+  ['loichao', 'mota', 'huongdan'].forEach(k => {
+    const el = document.getElementById('welcome-' + k);
+    const val = welcomeContent[{ loichao: 'loiChao', mota: 'moTa', huongdan: 'huongDan' }[k]];
+    if (val) el.innerHTML = val; else el.style.display = 'none';
+  });
+
+  // Box Thư Chủ tịch (config trong content.js — welcomeContent.thuChuTich)
+  const thu = welcomeContent.thuChuTich;
+  if (thu && thu.hienThi !== false) {
+    document.getElementById('welcome-thu').innerHTML = `
+      <div class="thu-box">
+        <div class="thu-box-icon"><i data-lucide="mail-open"></i></div>
+        <div class="thu-box-text">
+          <div class="thu-box-title">${thu.tieuDe}</div>
+          <div class="thu-box-desc">${thu.moTa}</div>
+        </div>
+        <button class="btn-doc-thu" onclick="openThuChuTich()">
+          <i data-lucide="book-open-text"></i> ${thu.nutMo}
+        </button>
+      </div>
+    `;
+  }
+
+  // Inject logo hoặc fallback về text/icon nếu ảnh không tải được
+  const welcomeLogo = document.getElementById('welcome-logo');
+  const sbLogo = document.getElementById('sb-logo-full');
+  const logoSrc = uiText.appLogoImg;
+  welcomeLogo.src = logoSrc;
+  sbLogo.src = logoSrc;
+  welcomeLogo.onerror = () => {
+    welcomeLogo.style.display = 'none';
+    document.getElementById('welcome-brand-fallback').style.display = 'flex';
+  };
+  sbLogo.onerror = () => { sbLogo.style.display = 'none'; };
+
+  // Inject UI text
+  document.getElementById('header-context-label').textContent = uiText.headerContextLabel;
+  document.getElementById('btn-change-context').textContent = uiText.headerChangeBtn;
+  document.getElementById('sb-toggle-btn').setAttribute('aria-label', uiText.sidebarToggleAria || 'Toggle menu');
+  document.getElementById('sb-toggle-label').textContent = uiText.sidebarToggleClose;
+
+  // Build sidebar từ menuConfig
+  buildSidebar();
+
+  // Khôi phục trạng thái sidebar collapsed (chỉ desktop)
+  initSidebarState();
+
+  lucide.createIcons();
+
+  const saved = localStorage.getItem('ipag-handbook-state');
+  if (saved) {
+    state = JSON.parse(saved);
+    if (state.sbu && state.khoi) {
+      showDashboard();
+      return;
+    }
+  }
+  showOnboarding();
+}
+
+function buildSidebar() {
+  const menuEl = document.getElementById('sb-menu');
+  let html = '';
+  menuConfig.forEach(group => {
+    if (group.nhom) html += `<div class="menu-group-title">${group.nhom}</div>`;
+    group.cacMuc.forEach(item => {
+      html += `<a class="menu-item" data-module="${item.id}" title="${item.ten}" onclick="switchModule('${item.id}')"><i data-lucide="${item.icon}"></i> <span class="menu-item-text">${item.ten}</span></a>`;
+    });
+  });
+  menuEl.innerHTML = html;
+}
+
+// --- SIDEBAR TOGGLE (desktop collapse + mobile overlay) ---
+function toggleSidebar() {
+  // Nút này chỉ có ở desktop (mobile dùng hamburger)
+  const sidebar = document.querySelector('.sidebar');
+  sidebar.classList.toggle('collapsed');
+  localStorage.setItem('ipag-sidebar-collapsed', sidebar.classList.contains('collapsed'));
+  updateSidebarToggleIcon();
+}
+
+function openMobileMenu() {
+  document.querySelector('.sidebar').classList.add('mobile-open');
+  document.getElementById('mobile-backdrop').classList.add('active');
+}
+
+function closeMobileMenu() {
+  document.querySelector('.sidebar').classList.remove('mobile-open');
+  document.getElementById('mobile-backdrop').classList.remove('active');
+}
+
+function updateSidebarToggleIcon() {
+  const sidebar = document.querySelector('.sidebar');
+  const btn = document.getElementById('sb-toggle-btn');
+  const collapsed = sidebar.classList.contains('collapsed');
+  btn.innerHTML = `
+    <i data-lucide="${collapsed ? 'panel-left-open' : 'panel-left-close'}"></i>
+    <span class="toggle-label" id="sb-toggle-label">${collapsed ? uiText.sidebarToggleOpen : uiText.sidebarToggleClose}</span>
+  `;
+  lucide.createIcons();
+}
+
+function initSidebarState() {
+  // Chỉ apply cho desktop (>= 768px). Mobile luôn khởi tạo ở trạng thái ẩn.
+  if (window.innerWidth >= 768) {
+    const saved = localStorage.getItem('ipag-sidebar-collapsed');
+    if (saved === 'true') {
+      document.querySelector('.sidebar').classList.add('collapsed');
+      updateSidebarToggleIcon();
+    }
+  }
+}
+
+// --- ONBOARDING ---
+function showOnboarding() {
+  document.getElementById('main-app').classList.remove('active');
+  document.getElementById('onboarding-screen').classList.add('active');
+  // Nếu chỉ có 1 SBU active → auto chọn và chuyển bước 2
+  const sbuKeys = Object.keys(sbus);
+  if (sbuKeys.length === 1) {
+    state.sbu = sbuKeys[0];
+    renderObStep2();
+  } else {
+    renderObStep1();
+  }
+}
+
+function resetOnboarding() {
+  state.sbu = null; state.khoi = null;
+  localStorage.removeItem('ipag-handbook-state');
+  showOnboarding();
+}
+
+function renderObStep1() {
+  const container = document.getElementById('ob-step-container');
+  let html = `<div class="step-title">${uiText.obStep1Title}</div><div class="grid-options">`;
+  Object.keys(sbus).forEach(key => {
+    const s = sbus[key];
+    const isSel = state.sbu === key ? 'selected' : '';
+    html += `<div class="option-card option-card-sbu ${isSel}" onclick="selectSbu('${key}')">
+               <span class="opt-code">${s.tenDayDu}</span>
+             </div>`;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+  reflow(container);
+}
+
+function selectSbu(key) {
+  state.sbu = key;
+  state.khoi = null;
+  // Nếu SBU có cấu hình khối mặc định (khoiMacDinh) → bỏ qua bước 2, chọn thẳng khối đó
+  const sbu = sbus[key];
+  if (sbu.khoiMacDinh) {
+    selectKhoi(sbu.khoiMacDinh);
+    return;
+  }
+  renderObStep2();
+}
+
+function renderObStep2() {
+  const container = document.getElementById('ob-step-container');
+  const sbu = sbus[state.sbu];
+  const onlyOneSbu = Object.keys(sbus).length === 1;
+  let html = `<div class="step-title">${uiText.obStep2Title} ${sbu.tenDayDu}?</div><div class="grid-options">`;
+  Object.entries(sbu.khoi).forEach(([k, name]) => {
+    const isSel = state.khoi === k ? 'selected' : '';
+    html += `<div class="option-card ${isSel}" onclick="selectKhoi('${k}')">
+               <span class="opt-code">${name}</span>
+             </div>`;
+  });
+  html += `</div>`;
+  // Nút quay lại chỉ hiện khi có >1 SBU
+  if (!onlyOneSbu) {
+    html += `<div style="margin-top: 32px;">
+               <button class="btn btn-outline" onclick="renderObStep1()"><i data-lucide="arrow-left" style="width:16px; margin-right:6px;"></i> ${uiText.obBackButton}</button>
+             </div>`;
+  }
+  container.innerHTML = html;
+  lucide.createIcons();
+  reflow(container);
+}
+
+function selectKhoi(k) {
+  state.khoi = k;
+  finishOnboarding();
+}
+
+function finishOnboarding() {
+  if (!state.sbu || !state.khoi) return;
+  localStorage.setItem('ipag-handbook-state', JSON.stringify(state));
+  showDashboard();
+}
+
+function reflow(el) {
+  el.style.animation = 'none';
+  el.offsetHeight;
+  el.style.animation = 'fadeIn 0.3s ease-out';
+}
+
+// --- DASHBOARD ---
+function showDashboard() {
+  document.getElementById('onboarding-screen').classList.remove('active');
+  document.getElementById('main-app').classList.add('active');
+  updateHeaderContext();
+  switchModule(state.currentModule || getFirstModuleId());
+}
+
+function updateHeaderContext() {
+  const sbu = sbus[state.sbu];
+  const sbuName = sbu?.tenDayDu || state.sbu;
+  // SBU có khoiMacDinh -> nhân sự không phải chọn khối, nên chỉ hiện tên SBU
+  if (sbu?.khoiMacDinh) {
+    document.getElementById('header-context-val').textContent = sbuName;
+    return;
+  }
+  const khoiName = sbu?.khoi[state.khoi] || state.khoi;
+  document.getElementById('header-context-val').textContent = `${sbuName} - ${khoiName}`;
+}
+
+// Tìm tên module trong menuConfig
+function getModuleTitle(id) {
+  for (const g of menuConfig) {
+    for (const m of g.cacMuc) {
+      if (m.id === id) return m.ten;
+    }
+  }
+  return id;
+}
+
+// Lấy id module đầu tiên trong menu (module trên cùng của sidebar).
+// Nhờ đó, đổi thứ tự menu trong content.js thì trang tự vào đúng module trên cùng.
+function getFirstModuleId() {
+  for (const nhom of menuConfig) {
+    if (nhom.cacMuc && nhom.cacMuc.length) return nhom.cacMuc[0].id;
+  }
+  return 'dan-nhap'; // dự phòng
+}
+// Module có trong menu hiện tại không? (id cũ đã gỡ → false)
+function isMenuModule(id) {
+  return menuConfig.some(g => g.cacMuc.some(m => m.id === id));
+}
+function switchModule(moduleId) {
+  // Người quay lại có thể còn lưu id module cũ (vd 'ipag-la-ai', 'vai-tro') → về module đầu menu
+  if (!isMenuModule(moduleId)) moduleId = getFirstModuleId();
+  state.currentModule = moduleId;
+  localStorage.setItem('ipag-handbook-state', JSON.stringify(state));
+  openAccordionId = null;  // reset accordion state khi chuyển module
+
+  // Auto-đóng mobile menu sau khi user chọn module
+  if (window.innerWidth < 768) closeMobileMenu();
+
+  document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+  const activeMenuItem = document.querySelector(`.menu-item[data-module="${moduleId}"]`);
+  if (activeMenuItem) activeMenuItem.classList.add('active');
+  document.getElementById('header-title').textContent = getModuleTitle(moduleId);
+
+  const contentDiv = document.getElementById('module-content');
+  contentDiv.classList.remove('animate-fade');
+  contentDiv.offsetHeight;
+  contentDiv.classList.add('animate-fade');
+  // Reset scroll lên đầu khi chuyển module
+  document.querySelector('.content-wrapper').scrollTop = 0;
+
+  const renderMap = {
+    'dan-nhap':    renderDanNhapModule,
+    'phan-1':      renderSoTayModule,
+    'phan-2':      renderSoTayModule,
+    'phan-3':      renderSoTayModule,
+    'lo-trinh':    renderLoTrinhModule,
+    'dao-tao':     renderDaoTaoModule,
+    'quy-dinh':    renderQuyDinhModule,
+    'nguon-luc':   renderNguonLucModule,
+    'glossary':    renderGlossaryModule,
+    'faq':         renderFaqModule
+  };
+  const fn = renderMap[moduleId] || renderPlaceholder;
+  fn(contentDiv, moduleId);
+
+  lucide.createIcons();
+  // SCORM: ghi nhận module vừa mở (an toàn khi mở ngoài LMS)
+  if (window.SCORM) window.SCORM.markViewed(moduleId);
+}
+
+// =============================================================================
+// HELPERS
+// =============================================================================
+
+// Hero card chung cho mọi module
+function renderHero(tieuDe, moTa, tipId, extraHtml = '') {
+  return `
+    <div class="module-hero">
+      <div class="module-hero-head">
+        <div>
+          <h1>${tieuDe}</h1>
+          <p>${moTa}</p>
+        </div>
+        ${tipId ? `<button class="btn-tip-hero" onclick="openTip('${tipId}')">
+          <i data-lucide="lightbulb"></i> ${uiText.tipButton}
+        </button>` : ''}
+      </div>
+      ${extraHtml}
+    </div>
+  `;
+}
+
+// Toggle 1 accordion item (chỉ 1 mở cùng lúc)
+function toggleMacc(id) {
+  const item = document.getElementById(id);
+  if (!item) return;
+  if (openAccordionId && openAccordionId !== id) {
+    const prev = document.getElementById(openAccordionId);
+    if (prev) prev.classList.remove('expanded');
+  }
+  item.classList.toggle('expanded');
+  openAccordionId = item.classList.contains('expanded') ? id : null;
+  // Scroll item vào view
+  if (item.classList.contains('expanded')) {
+    setTimeout(() => item.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 200);
+  }
+}
+
+// =============================================================================
+// MODULE: SỔ TAY HỘI NHẬP (Dẫn nhập · Phần I · Phần II · Phần III)
+// Dữ liệu ở content.js (danNhapContent, phan1Content, phan2Content, phan3Content).
+// Mỗi mục là danh sách "khối" — xem bảng loại khối ở đầu mục 2 trong content.js.
+// =============================================================================
+
+// Khung "Giúp bạn" / "Với bạn"
+function renderCallout(kieu, nhan, noiDung, phuLuc = '') {
+  const icon = kieu === 'giup' ? 'lightbulb' : 'footprints';
+  return `
+    <div class="st-callout st-callout--${kieu}">
+      <div class="st-callout-nhan"><i data-lucide="${icon}"></i>${nhan}</div>
+      <div class="st-callout-text">${noiDung}${phuLuc}</div>
+    </div>`;
+}
+
+// Lưới thẻ: mặc định / "chang" (thẻ bấm để chuyển module) / "buoc" (các bước có số)
+function renderTheGrid(k) {
+  if (k.kieu === 'chang') {
+    return `<div class="st-chang">${k.the.map((t, i) => `
+      <button type="button" class="st-chang-card" onclick="switchModule('${t.toi}')">
+        <span class="st-chang-so">${['I', 'II', 'III', 'IV', 'V'][i] || i + 1}</span>
+        <span class="st-chang-text"><strong>${t.ten}</strong><span>${t.noiDung}</span></span>
+        <i data-lucide="arrow-right" class="st-chang-arrow"></i>
+      </button>`).join('')}</div>`;
+  }
+  if (k.kieu === 'buoc') {
+    return `<ol class="st-buoc">${k.the.map(t => `
+      <li><strong>${t.ten}:</strong> ${t.noiDung}</li>`).join('')}</ol>`;
+  }
+  // Số cột cân theo số thẻ: 4 thẻ → 2×2, 3 thẻ → 3 cột, 2 thẻ → 2 cột
+  const n = k.the.length;
+  const cols = n === 4 ? 2 : Math.min(n, 3);
+  return `<div class="st-the-grid" data-cols="${cols}" style="--cols:${cols}">${k.the.map(t => `
+    <div class="st-the">
+      <div class="st-the-ten">${t.ten}</div>
+      ${t.phuDe ? `<div class="st-the-phude">${t.phuDe}</div>` : ''}
+      <div class="st-the-text">${t.noiDung}</div>
+      ${t.voiBan ? `<div class="st-the-voiban"><strong>${uiText.soTayVoiBan}:</strong> ${t.voiBan}</div>` : ''}
+    </div>`).join('')}</div>`;
+}
+
+// Bảng: desktop = bảng, mobile = mỗi dòng thành 1 thẻ (dùng lại CSS table.bang)
+//   k.rong           : độ rộng từng cột trên desktop (vd ["30%","70%"])
+//   k.khongXuongDong : các cột (đếm từ 0) giữ trên 1 dòng
+function renderBangKhoi(k) {
+  const nowrap = k.khongXuongDong || [];
+  const colgroup = k.rong ? `<colgroup>${k.rong.map(w => `<col style="width:${w}">`).join('')}</colgroup>` : '';
+  return `<div class="bang-wrap"><table class="bang${k.rong ? ' bang--codinh' : ''}">
+    ${colgroup}
+    <thead><tr>${k.cot.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+    <tbody>${k.dong.map(r => `<tr>${r.map((cell, ci) => `<td data-label="${k.cot[ci]}"${nowrap.includes(ci) ? ' class="nowrap"' : ''}>${cell}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// Render 1 khối nội dung
+function renderKhoi(k) {
+  switch (k.loai) {
+    case 'doan':     return `<p class="st-doan">${k.noiDung}</p>`;
+    case 'tieuDe':   return `<h3 class="st-tieude">${k.noiDung}</h3>`;
+    case 'chuThich': return `<p class="st-chuthich">${k.noiDung}</p>`;
+    case 'trichDan': return `<blockquote class="st-trich">${k.noiDung}</blockquote>`;
+    case 'danhSach': {
+      // Mục nào đã bắt đầu bằng số tròn ①②③… thì bỏ chấm đầu dòng
+      const coSo = k.muc.every(m => /^[\u2460-\u2473]/.test(m.replace(/<[^>]*>/g, '').trim()));
+      return `<ul class="st-ds${coSo ? ' st-ds--so' : ''}">${k.muc.map(m => `<li>${m}</li>`).join('')}</ul>`;
+    }
+    case 'bang':     return renderBangKhoi(k);
+    case 'the':      return renderTheGrid(k);
+    case 'giupBan':  return renderCallout('giup', uiText.soTayGiupBan, k.noiDung);
+    case 'voiBan': {
+      const mau = k.dong ? `<div class="st-maudien">${k.dong.map(d =>
+        `<div class="st-maudien-dong">${d.replace(/___/g, '<span class="st-blank"></span>')}</div>`).join('')}</div>` : '';
+      const ghiChu = k.ghiChu ? `<div class="st-callout-ghichu">${k.ghiChu}</div>` : '';
+      return renderCallout('voi', uiText.soTayVoiBan, k.noiDung, mau + ghiChu);
+    }
+    case 'ghiNho':
+      return `<div class="nhip-ket-module st-ghinho"><i data-lucide="${k.icon || 'flag'}"></i><div>
+        ${k.tieuDe ? `<div class="st-ghinho-tt">${k.tieuDe}</div>` : ''}<p>${k.noiDung}</p></div></div>`;
+    default: return '';
+  }
+}
+const renderKhoiList = list => (list || []).map(renderKhoi).join('');
+
+// Nút sang phần tiếp theo (cuối module)
+function renderChuyenTiep(ct) {
+  if (!ct) return '';
+  return `<div class="st-next">
+    ${ct.cauDan ? `<p>${ct.cauDan}</p>` : ''}
+    <button type="button" class="st-next-btn" onclick="switchModule('${ct.toi}')">${ct.nut} <i data-lucide="arrow-right"></i></button>
+  </div>`;
+}
+
+// Phần I / II / III — hero + (mở đầu) + accordion các mục + (kết) + chuyển tiếp
+function renderSoTayModule(container, moduleId) {
+  const c = { 'phan-1': phan1Content, 'phan-2': phan2Content, 'phan-3': phan3Content }[moduleId];
+  if (!c) return renderPlaceholder(container);
+
+  const statsHtml = c.conSo ? `<div class="stats-grid st-stats">${c.conSo.map(s => `
+    <div class="stat-card"><i data-lucide="${s.icon}"></i>
+      <div class="stat-num">${s.soLieu}</div><div class="stat-label">${s.nhan}</div></div>`).join('')}</div>` : '';
+
+  const mucHtml = c.cacMuc.map((m, idx) => {
+    const itemId = `${moduleId}-muc-${idx}`;
+    return `
+      <div class="macc-item" id="${itemId}">
+        <div class="macc-head" onclick="toggleMacc('${itemId}')">
+          <div class="macc-num">${idx + 1}</div>
+          <div class="macc-title-wrap">
+            <div class="macc-title">${m.tieuDe}</div>
+            ${m.tagline ? `<div class="macc-tagline">${m.tagline}</div>` : ''}
+          </div>
+          <i data-lucide="chevron-down" class="macc-chevron"></i>
+        </div>
+        <div class="macc-body st-body">${renderKhoiList(m.khoi)}</div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML =
+    renderHero(`${c.nhan}: ${c.tieuDe}`, c.moTa, moduleId, statsHtml) +
+    (c.moDau ? `<div class="st-modau">${renderKhoiList(c.moDau)}</div>` : '') +
+    `<div class="module-accordion">${mucHtml}</div>` +
+    (c.ketThuc ? `<div class="st-ketthuc">${renderKhoiList(c.ketThuc)}</div>` : '') +
+    renderChuyenTiep(c.chuyenTiep);
+}
+
+// =============================================================================
+// MODULE: DẪN NHẬP (trang mở đầu Sổ tay — không dùng accordion)
+// =============================================================================
+function renderDanNhapModule(container) {
+  const c = danNhapContent;
+  const b = c.bia;
+  container.innerHTML = `
+    <div class="dn-wrap">
+      <div class="dn-hero st-bia">
+        <div class="st-bia-tt">${b.tieuDe}</div>
+        <div class="st-bia-ten">${b.tenTapDoan}</div>
+        <div class="st-bia-phu">${b.dongPhu.map(d => `<em>${d}</em>`).join('')}</div>
+        <div class="st-bia-chao"><strong>${b.loiChao}</strong><span>${b.camKet}</span></div>
+      </div>
+      <h2 class="st-dn-tt">${c.tieuDe}</h2>
+      <div class="st-body">${renderKhoiList(c.khoi)}</div>
+      ${renderChuyenTiep(c.chuyenTiep)}
+    </div>`;
+}
+
+// =============================================================================
+// MODULE: LỘ TRÌNH 60 NGÀY
+// =============================================================================
+function renderLoTrinhModule(container) {
+  const stagesHtml = loTrinhContent.giaiDoan.map(g => {
+    const colorClass = `color-${g.mauNhan}`;
+    return `
+      <div class="timeline-stage ${colorClass}">
+        <div class="timeline-marker"><i data-lucide="${g.icon}"></i></div>
+        <div class="timeline-content">
+          <div class="timeline-moc">${g.mocThoiGian}</div>
+          <h3>${g.tieuDe}</h3>
+          <div class="timeline-ngan">${g.moTaNgan}</div>
+          <ul class="timeline-list">
+            ${g.hoatDong.map(h => `<li>${h}</li>`).join('')}
+          </ul>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = renderHero(loTrinhContent.tieuDe, loTrinhContent.moTa, 'lo-trinh') +
+                        `<div class="timeline-60">${stagesHtml}</div>`;
+}
+
+// =============================================================================
+// MODULE: CHƯƠNG TRÌNH ĐÀO TẠO
+// =============================================================================
+function renderDaoTaoModule(container) {
+  const jobCourses = daoTaoData.jobOnboarding.theoKhoi[state.sbu]?.[state.khoi] || [];
+  // Company Onboarding = khoá chung + khoá bổ sung riêng của SBU (nếu có)
+  const companyCourses = [
+    ...(daoTaoData.companyOnboarding.chung || []),
+    ...(daoTaoData.companyOnboarding.theoSBU?.[state.sbu] || [])
+  ];
+  const companyCount = companyCourses.length;
+  const jobCount = jobCourses.length;
+
+  const heroExtra = `
+    <div class="daotao-hero-grid">
+      <div class="daotao-hero-card" onclick="scrollToSection('section-company')">
+        <div class="daotao-hero-head"><i data-lucide="building-2"></i><h3>${uiText.daoTaoCompanyHeader}</h3></div>
+        <p>Khoá học chung cho mọi nhân sự IPAG: văn hoá tổ chức, EPIC, an ninh thông tin.</p>
+        <span class="daotao-count">${companyCount} khoá học</span>
+      </div>
+      <div class="daotao-hero-card color-navy" onclick="scrollToSection('section-job')">
+        <div class="daotao-hero-head"><i data-lucide="briefcase"></i><h3>${uiText.daoTaoJobHeader}</h3></div>
+        <p>Khoá học chuyên môn theo vị trí (${sbus[state.sbu]?.tenDayDu} - ${sbus[state.sbu]?.khoi[state.khoi]}).</p>
+        <span class="daotao-count">${jobCount} khoá học</span>
+      </div>
+    </div>`;
+
+  // Note: hero ở module này nằm trong main-content, không nằm trong .module-hero
+  // vì cần 2 card lớn ngay sau. Mình dùng cách khác: vẫn dùng renderHero nhưng để stats grid là 2 card.
+
+  container.innerHTML = `
+    <div class="module-hero">
+      <div class="module-hero-head">
+        <div>
+          <h1>${daoTaoData.intro.tieuDe}</h1>
+          <p>${daoTaoData.intro.moTa}</p>
+          ${daoTaoData.intro.luuY ? `<div class="notice-box"><i data-lucide="monitor-x"></i><span>${daoTaoData.intro.luuY}</span></div>` : ''}
+        </div>
+        <button class="btn-tip-hero" onclick="openTip('dao-tao')">
+          <i data-lucide="lightbulb"></i> ${uiText.tipButton}
+        </button>
+      </div>
+    </div>
+
+    ${heroExtra}
+
+    <div class="section-header" id="section-company">
+      <h2>${uiText.daoTaoCompanyHeader}</h2>
+      <span class="badge-count">${companyCount}</span>
+    </div>
+    <div class="course-grid">
+      ${companyCourses.map(renderCourseCard).join('')}
+    </div>
+
+    <div class="section-header" id="section-job">
+      <h2>${uiText.daoTaoJobHeader}</h2>
+      <span class="badge-count">${jobCount}</span>
+    </div>
+    <div class="course-grid">
+      ${jobCount > 0
+        ? jobCourses.map(renderCourseCard).join('')
+        : `<div style="grid-column: 1/-1; color: var(--text-muted); font-style:italic;">${uiText.daoTaoEmptyJob}</div>`
+      }
+    </div>
+  `;
+}
+
+function renderCourseCard(course) {
+  const tagClass = course.batBuoc ? 'tag-required' : 'tag-optional';
+  const tagText = course.batBuoc ? uiText.daoTaoTagRequired : uiText.daoTaoTagOptional;
+  return `
+    <div class="course-card">
+      <div class="course-tags"><span class="tag ${tagClass}">${tagText}</span></div>
+      <h3>${course.ten}</h3>
+      <p>${course.moTa}</p>
+      <a href="${course.lmsUrl}" target="_blank" class="btn-outline">${uiText.daoTaoCourseBtn}</a>
+    </div>
+  `;
+}
+
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// =============================================================================
+// MODULE: QUY ĐỊNH NHÂN SỰ
+// =============================================================================
+function renderQuyDinhModule(container) {
+  // 1. PHẦN RIÊNG THEO KHỐI (nếu có) — chưa kích hoạt
+  const rieng = quyDinhContent.theoKhoi?.[state.khoi];
+  let riengHtml = '';
+  if (rieng) {
+    const rieUngItemsHtml = (rieng.cacMuc || []).map((muc, idx) =>
+      renderQuyDinhItem(muc, `quydinh-rieng-${idx}`)
+    ).join('');
+    riengHtml = `
+      <div class="vt-rieng">
+        <div class="vt-rieng-head"><i data-lucide="user-round-check"></i> <h2>${rieng.tieuDe}</h2></div>
+        <div class="vt-rieng-body">
+          ${rieng.dienGiai ? `<p>${rieng.dienGiai}</p>` : ''}
+          <div class="module-accordion">${rieUngItemsHtml}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 2. PHẦN CHUNG — áp dụng cho mọi SBU
+  const chungItemsHtml = quyDinhContent.chung.cacMuc.map((muc, idx) =>
+    renderQuyDinhItem(muc, `quydinh-chung-${idx}`)
+  ).join('');
+
+  // 3. Section header "Quy định chung" chỉ hiện khi có phần riêng ở trên
+  const chungHeader = rieng ? `
+    <div class="vt-section-title">
+      <i data-lucide="layers"></i> Quy định chung của IPAG
+    </div>` : '';
+
+  container.innerHTML =
+    renderHero(quyDinhContent.tieuDe, quyDinhContent.moTa, 'quy-dinh') +
+    riengHtml +
+    chungHeader +
+    `<div class="module-accordion">${chungItemsHtml}</div>`;
+}
+
+// Helper: render 1 item accordion cho module Quy định
+function renderQuyDinhItem(muc, itemId) {
+  const linkHtml = muc.linkNgoai ? `
+    <a href="${muc.linkNgoai.url}" target="_blank" rel="noopener noreferrer" class="btn-external">
+      <i data-lucide="external-link"></i>${muc.linkNgoai.tieuDeNut}
+    </a>` : '';
+  return `
+    <div class="macc-item" id="${itemId}">
+      <div class="macc-head" onclick="toggleMacc('${itemId}')">
+        <div class="macc-icon"><i data-lucide="${muc.icon}"></i></div>
+        <div class="macc-title-wrap"><div class="macc-title">${muc.tieuDe}</div></div>
+        <i data-lucide="chevron-down" class="macc-chevron"></i>
+      </div>
+      <div class="macc-body">
+        <div>${muc.noiDung}</div>
+        ${linkHtml}
+      </div>
+    </div>
+  `;
+}
+
+// =============================================================================
+// MODULE: MẠNG LƯỚI ĐỒNG HÀNH
+// =============================================================================
+function renderNguonLucModule(container) {
+  const mauToVarLocal = mau => ({orange: 'var(--orange)', navy: 'var(--navy)', steel: 'var(--steel)', green: '#2F855A'}[mau] || 'var(--navy)');
+  const mauToNenLocal = mau => ({green: '#f2fbf4', orange: '#fff8f3', navy: '#f8fbff'}[mau] || 'var(--bg-main)');
+
+  // Những người đồng hành — 2 nhóm, mỗi nhóm 1 nhãn + lưới thẻ 2 cột
+  const dh = nguonLucContent.dongHanh;
+  const dongHanhHtml = `
+    <div class="dh-wrap">
+      <h2 class="dh-tieude">${dh.tieuDe}</h2>
+      <p class="dh-phude">${dh.phuDe}</p>
+      ${dh.nhom.map(n => `
+        <div class="dh-nhan">${n.nhan}</div>
+        <div class="dh-grid">${n.vaiTro.map(v => `
+          <div class="dh-card dh-card--${n.kieu}">
+            <h3><i data-lucide="${v.icon}"></i> ${v.tieuDe}</h3>
+            <p>${v.noiDung}</p>
+          </div>`).join('')}
+        </div>`).join('')}
+    </div>`;
+
+  // Đầu mối khác — accordion
+  // Hỗ trợ 2 kiểu liên hệ:
+  //   - dauMoiTheoSBU: { SBU: [{ten, email}] }  -> hiện danh sách riêng theo SBU đã chọn
+  //   - email: "..."                            -> dùng khi SBU chưa được khai báo (fallback)
+  const dauMoiHtml = nguonLucContent.dauMoiKhac.danhSach.map((item, idx) => {
+    const itemId = `daumoi-${idx}`;
+    const dsSbu = item.dauMoiTheoSBU?.[state.sbu];
+    const lienHeHtml = (dsSbu && dsSbu.length)
+      ? dsSbu.map(n => `<div class="accordion-email"><i data-lucide="mail" style="width:14px;"></i> <strong>${n.ten}</strong> — ${n.email}</div>`).join('')
+      : (item.email ? `<div class="accordion-email"><i data-lucide="mail" style="width:14px;"></i> ${item.email}</div>` : '');
+    return `
+      <div class="accordion-item" id="${itemId}">
+        <div class="accordion-header" onclick="toggleAccordion('${itemId}')">
+          <div class="accordion-header-left">
+            <div class="accordion-badge" style="background:${mauToNenLocal(item.mauNhan)}; color:${mauToVarLocal(item.mauNhan)};">${item.ma}</div>
+            <div class="accordion-title">${item.tenDayDu}</div>
+          </div>
+          <i data-lucide="chevron-down" class="accordion-chevron"></i>
+        </div>
+        <div class="accordion-body">
+          <p>${item.moTa}</p>
+          ${lienHeHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Nền tảng — accordion
+  // Hỗ trợ thêm: dauMoiHoTro: [{ten, email}] + tieuDeDauMoi (tuỳ chọn)
+  const ntHtml = nguonLucContent.nenTang.danhSach.map((item, idx) => {
+    const itemId = `nentang-${idx}`;
+    const dmHtml = (item.dauMoiHoTro && item.dauMoiHoTro.length)
+      ? `<div style="font-weight:600; color:var(--navy); font-size:13px; margin-top:16px; margin-bottom:6px;">${item.tieuDeDauMoi || 'Đầu mối hỗ trợ'}</div>`
+        + item.dauMoiHoTro.map(n => `<div class="accordion-email"><i data-lucide="mail" style="width:14px;"></i> <strong>${n.ten}</strong> — ${n.email}</div>`).join('')
+      : '';
+    return `
+      <div class="accordion-item" id="${itemId}">
+        <div class="accordion-header" onclick="toggleAccordion('${itemId}')">
+          <div class="accordion-header-left">
+            <div class="accordion-badge" style="background:var(--bg-main); color:var(--navy);">
+              <i data-lucide="${item.icon}" style="width:18px;"></i>
+            </div>
+            <div class="accordion-title">${item.tieuDe}</div>
+          </div>
+          <i data-lucide="chevron-down" class="accordion-chevron"></i>
+        </div>
+        <div class="accordion-body"><p>${item.moTa}</p>${item.linkNgoai ? `<a href="${item.linkNgoai.url}" target="_blank" rel="noopener noreferrer" class="btn-external"><i data-lucide="external-link"></i>${item.linkNgoai.tieuDeNut}</a>` : ''}${dmHtml}</div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = renderHero(nguonLucContent.tieuDe, nguonLucContent.moTa, 'nguon-luc') +
+    dongHanhHtml +
+    `
+
+     <h2 style="font-size: 20px; color: var(--navy); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+       <i data-lucide="contact" style="color: var(--orange);"></i> ${nguonLucContent.dauMoiKhac.tieuDe}
+     </h2>
+     <div class="accordion-list" style="margin-bottom: 40px;">${dauMoiHtml}</div>
+
+     <h2 style="font-size: 20px; color: var(--navy); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+       <i data-lucide="layout-grid" style="color: var(--orange);"></i> ${nguonLucContent.nenTang.tieuDe}
+     </h2>
+     <div class="accordion-list">${ntHtml}</div>
+    `;
+}
+
+// Accordion cho dLink legacy (cùng toggle pattern)
+function toggleAccordion(id) {
+  document.getElementById(id).classList.toggle('expanded');
+}
+
+// =============================================================================
+// MODULE: TỪ ĐIỂN THUẬT NGỮ
+// =============================================================================
+function renderGlossaryModule(container) {
+  const renderItem = item => `
+    <div class="glossary-item" data-search="${(item.term + ' ' + (item.tenDayDu || '') + ' ' + item.def).toLowerCase().replace(/<[^>]*>/g, '').replace(/"/g, '&quot;')}">
+      <div class="glossary-term">${item.term}</div>
+      ${item.tenDayDu ? `<div class="glossary-fullname">${item.tenDayDu}</div>` : ''}
+      <div class="glossary-def">${item.def}</div>
+    </div>
+  `;
+
+  container.innerHTML = `
+    <h1 class="module-title">${uiText.glossaryTieuDe}</h1>
+    <p class="module-desc">${uiText.glossaryMoTa}</p>
+
+    <div class="search-bar">
+      <i data-lucide="search"></i>
+      <input type="text" class="search-input" id="glossary-search" placeholder="${uiText.glossarySearchPlaceholder}" oninput="filterGlossary(this.value)">
+    </div>
+
+    <div class="gl-chips">
+      ${glossaryData.nhom.map((g, i) => `<button type="button" class="gl-chip" onclick="scrollToSection('gl-nhom-${i}')">${g.ten.replace(/^PHẦN\s+[IVX]+:\s*/i, '')} <span>${g.muc.length}</span></button>`).join('')}
+    </div>
+
+    ${glossaryData.nhom.map((g, i) => `
+      <div class="glossary-section" id="gl-nhom-${i}">
+        <div class="glossary-section-title">${g.ten}</div>
+        <div class="glossary-list">${g.muc.map(renderItem).join('')}</div>
+      </div>`).join('')}
+    <div class="faq-empty" id="glossary-empty" style="display:none;">${uiText.glossaryNoResult}</div>
+  `;
+}
+
+function filterGlossary(query) {
+  query = query.toLowerCase().trim();
+  document.querySelectorAll('.glossary-item').forEach(item => {
+    const text = item.getAttribute('data-search');
+    item.style.display = (!query || text.includes(query)) ? 'flex' : 'none';
+  });
+  // Ẩn section nếu không còn item nào visible
+  document.querySelectorAll('.glossary-section').forEach(sec => {
+    const anyVisible = Array.from(sec.querySelectorAll('.glossary-item')).some(it => it.style.display !== 'none');
+    sec.style.display = anyVisible ? 'block' : 'none';
+  });
+  const empty = document.getElementById('glossary-empty');
+  if (empty) empty.style.display = document.querySelector('.glossary-item:not([style*="none"])') ? 'none' : 'block';
+}
+
+// =============================================================================
+// MODULE: FAQ
+// =============================================================================
+function renderFaqModule(container) {
+  const groupsHtml = faqData.map((group, gIdx) => `
+    <div class="faq-group" data-group="${gIdx}">
+      <div class="faq-group-title">${group.nhom}</div>
+      ${group.cacCau.map(c => {
+        const searchText = (c.q + ' ' + c.a).toLowerCase().replace(/<[^>]*>/g, '').replace(/"/g, '&quot;');
+        return `
+          <div class="faq-item" data-search="${searchText}">
+            <div class="faq-q"><i data-lucide="help-circle" style="width:20px;"></i> ${c.q}</div>
+            <div class="faq-a">${c.a}</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `).join('');
+
+  container.innerHTML = `
+    <h1 class="module-title">Câu hỏi thường gặp (FAQ)</h1>
+    <p class="module-desc">Tổng hợp các câu hỏi thường gặp về hệ thống LMS, lộ trình đào tạo hội nhập, tài khoản, và các chế độ nhân sự (CnB).</p>
+
+    <div class="search-bar">
+      <i data-lucide="search"></i>
+      <input type="text" class="search-input" id="faq-search" placeholder="${uiText.faqSearchPlaceholder}" oninput="filterFaq(this.value)">
+    </div>
+
+    <div id="faq-list">${groupsHtml}</div>
+    <div class="faq-empty" id="faq-empty" style="display:none;">${uiText.faqNoResult}</div>
+  `;
+}
+
+function filterFaq(query) {
+  query = query.toLowerCase().trim();
+  let totalVisible = 0;
+  document.querySelectorAll('.faq-item').forEach(item => {
+    const text = item.getAttribute('data-search');
+    const visible = !query || text.includes(query);
+    item.style.display = visible ? 'block' : 'none';
+    if (visible) totalVisible++;
+  });
+  // Ẩn group nếu không còn item nào visible
+  document.querySelectorAll('.faq-group').forEach(g => {
+    const anyVisible = Array.from(g.querySelectorAll('.faq-item')).some(it => it.style.display !== 'none');
+    g.style.display = anyVisible ? 'block' : 'none';
+  });
+  document.getElementById('faq-empty').style.display = totalVisible === 0 ? 'block' : 'none';
+}
+
+// =============================================================================
+// PLACEHOLDER
+// =============================================================================
+function renderPlaceholder(container) {
+  container.innerHTML = `
+    <div class="empty-state">
+      <i data-lucide="clock"></i>
+      <h3>${uiText.emptyTitle}</h3>
+      <p>${uiText.emptyDesc}</p>
+    </div>
+  `;
+}
+
+// =============================================================================
+// MODAL: TIPS
+// =============================================================================
+function parseTipText(text) {
+  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  const lines = text.split('\n');
+  let html = '';
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    if (line === '') { i++; continue; }
+    if (/^\d+\.\s/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\d+\.\s/.test(lines[i].trim())) {
+        items.push(lines[i].trim().replace(/^\d+\.\s/, ''));
+        i++;
+      }
+      html += '<ol style="padding-left: 20px; margin-bottom: 16px;">' +
+              items.map(it => `<li>${it}</li>`).join('') + '</ol>';
+    } else if (/^-\s/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^-\s/.test(lines[i].trim())) {
+        items.push(lines[i].trim().replace(/^-\s/, ''));
+        i++;
+      }
+      html += '<ul style="padding-left: 20px; margin-bottom: 16px;">' +
+              items.map(it => `<li>${it}</li>`).join('') + '</ul>';
+    } else {
+      html += `<p style="margin-bottom: 12px;">${line}</p>`;
+      i++;
+    }
+  }
+  return html;
+}
+
+function openTip(moduleId) {
+  const tip = globalTips[moduleId];
+  if (!tip) {
+    alert("Tip cho phần này đang được biên tập và sẽ sớm ra mắt!");
+    return;
+  }
+  document.querySelector('#tips-modal .modal-content').classList.remove('modal-content--rong');
+  document.getElementById('modal-title').textContent = tip.tieuDe;
+  let html = parseTipText(tip.noiDung);
+  if (tip.anh) {
+    html += `<img src="${tip.anh}" onerror="this.src='https://via.placeholder.com/600x300?text=Image+Placeholder'" alt="Minh hoạ" style="width:100%; border-radius:8px; margin-top:16px; border:1px solid var(--border);">`;
+  }
+  document.getElementById('modal-body-content').innerHTML = html;
+  document.getElementById('tips-modal').classList.add('active');
+}
+
+function closeModal(event) {
+  if (event && event.target !== event.currentTarget) return;
+  document.getElementById('tips-modal').classList.remove('active');
+}
+
+// Mở thư Chủ tịch trong modal (tái dùng tips-modal).
+// Mỗi trang thư là 1 ảnh; tap ảnh mở bản gốc ở tab mới (pinch-zoom trên mobile).
+function openThuChuTich() {
+  const thu = welcomeContent.thuChuTich;
+  if (!thu) return;
+  // Thư dàn trang ngang → mở khung rộng để đọc được chữ mà không cần phóng to
+  document.querySelector('#tips-modal .modal-content').classList.add('modal-content--rong');
+  document.getElementById('modal-title').textContent = thu.tieuDe;
+  const html =
+    thu.anh.map((src, i) => `
+      <a href="${src}" target="_blank" rel="noopener" title="Mở trang ${i + 1} bản đầy đủ">
+        <img src="${src}" alt="Thư Chủ tịch — trang ${i + 1}" class="thu-page" loading="lazy">
+      </a>
+    `).join('') +
+    (thu.ghiChu ? `<div class="thu-ghichu">${thu.ghiChu}</div>` : '');
+  document.getElementById('modal-body-content').innerHTML = html;
+  document.getElementById('tips-modal').classList.add('active');
+  if (window.lucide) lucide.createIcons();
+}
+
+// =============================================================================
+// MODAL: IMAGE ZOOM (giữ lại — dùng khi cần zoom ảnh trong tương lai)
+// =============================================================================
+let zoomState = { scale: 1, panX: 0, panY: 0, isDragging: false, startX: 0, startY: 0 };
+
+function openZoom(imgSrc) {
+  const img = document.getElementById('zoom-image');
+  img.src = imgSrc;
+  zoomState = { scale: 1, panX: 0, panY: 0, isDragging: false, startX: 0, startY: 0 };
+  applyZoom();
+  document.getElementById('zoom-overlay').classList.add('active');
+  setTimeout(() => lucide.createIcons(), 0);
+}
+
+function closeZoom() {
+  document.getElementById('zoom-overlay').classList.remove('active');
+}
+
+function zoomIn()    { zoomState.scale = Math.min(zoomState.scale * 1.25, 5); applyZoom(); }
+function zoomOut()   { zoomState.scale = Math.max(zoomState.scale / 1.25, 0.5); applyZoom(); }
+function zoomReset() { zoomState = { scale: 1, panX: 0, panY: 0, isDragging: false, startX: 0, startY: 0 }; applyZoom(); }
+
+function applyZoom() {
+  const img = document.getElementById('zoom-image');
+  img.style.transform = `translate(${zoomState.panX}px, ${zoomState.panY}px) scale(${zoomState.scale})`;
+  document.getElementById('zoom-level').textContent = Math.round(zoomState.scale * 100) + '%';
+}
+
+// Pan với chuột khi đã zoom
+document.addEventListener('DOMContentLoaded', () => {
+  const content = document.getElementById('zoom-content');
+  content.addEventListener('mousedown', e => {
+    if (zoomState.scale <= 1) return;
+    zoomState.isDragging = true;
+    zoomState.startX = e.clientX - zoomState.panX;
+    zoomState.startY = e.clientY - zoomState.panY;
+    content.classList.add('dragging');
+  });
+  document.addEventListener('mousemove', e => {
+    if (!zoomState.isDragging) return;
+    zoomState.panX = e.clientX - zoomState.startX;
+    zoomState.panY = e.clientY - zoomState.startY;
+    applyZoom();
+  });
+  document.addEventListener('mouseup', () => {
+    zoomState.isDragging = false;
+    content.classList.remove('dragging');
+  });
+  // Scroll wheel zoom
+  content.addEventListener('wheel', e => {
+    if (!document.getElementById('zoom-overlay').classList.contains('active')) return;
+    e.preventDefault();
+    if (e.deltaY < 0) zoomIn(); else zoomOut();
+  }, { passive: false });
+  // Esc để đóng modal/zoom/pdf
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (document.getElementById('zoom-overlay').classList.contains('active')) closeZoom();
+      else if (document.getElementById('tips-modal').classList.contains('active')) closeModal();
+    }
+  });
+});
+
+// Khởi chạy
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest identifier="ipag_handbook_ob_v2" version="1.0"
+          xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+          xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 imscp_rootv1p1p2.xsd http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
+  <metadata><schema>ADL SCORM</schema><schemaversion>1.2</schemaversion></metadata>
+  <organizations default="ipag_handbook_ob_v2_org">
+    <organization identifier="ipag_handbook_ob_v2_org">
+      <title>Sổ tay Hội nhập IPAG (Onboarding Handbook) — v2</title>
+      <item identifier="item_1" identifierref="resource_1" isvisible="true">
+        <title>Sổ tay Hội nhập IPAG (Onboarding Handbook) — v2</title>
+      </item>
+    </organization>
+  </organizations>
+  <resources>
+    <resource identifier="resource_1" type="webcontent" adlcp:scormtype="sco" href="index.html">
+      <file href="content.js"/>
+      <file href="images/chung/epic-pocket-card-v6.png"/>
+      <file href="images/chung/huong-dan-lms-v2.jpg"/>
+      <file href="images/chung/logo-ipa-group.png"/>
+      <file href="images/chung/thu-chu-tich.png"/>
+      <file href="images/icons/apple-touch-icon.png"/>
+      <file href="images/icons/favicon-32.png"/>
+      <file href="images/icons/icon-192.png"/>
+      <file href="images/icons/icon-512.png"/>
+      <file href="index.html"/>
+      <file href="scorm/localstorage-shim.js"/>
+      <file href="scorm/scorm_wrapper.js"/>
+      <file href="styles.css"/>
+      <file href="vendor/fonts/be-vietnam-pro-latin-400-normal.woff2"/>
+      <file href="vendor/fonts/be-vietnam-pro-latin-500-normal.woff2"/>
+      <file href="vendor/fonts/be-vietnam-pro-latin-600-normal.woff2"/>
+      <file href="vendor/fonts/be-vietnam-pro-latin-700-normal.woff2"/>
+      <file href="vendor/fonts/be-vietnam-pro-latin-ext-400-normal.woff2"/>
+      <file href="vendor/fonts/be-vietnam-pro-latin-ext-500-normal.woff2"/>
+      <file href="vendor/fonts/be-vietnam-pro-latin-ext-600-normal.woff2"/>
+      <file href="vendor/fonts/be-vietnam-pro-latin-ext-700-normal.woff2"/>
+      <file href="vendor/fonts/be-vietnam-pro-vietnamese-400-normal.woff2"/>
+      <file href="vendor/fonts/be-vietnam-pro-vietnamese-500-normal.woff2"/>
+      <file href="vendor/fonts/be-vietnam-pro-vietnamese-600-normal.woff2"/>
+      <file href="vendor/fonts/be-vietnam-pro-vietnamese-700-normal.woff2"/>
+      <file href="vendor/fonts/be-vietnam-pro.css"/>
+      <file href="vendor/lucide.min.js"/>
+    </resource>
+  </resources>
+</manifest>
